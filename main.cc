@@ -97,13 +97,13 @@ int main(int argc, const char **argv) {
 
         try {
             if( algorithm == 1 ) {
-                //value = negamax(pv[i], 0, color, use_tt);
+                value = negamax(pv[i], 0, color, use_tt);
             } else if( algorithm == 2 ) {
-                //value = negamax(pv[i], 0, -200, 200, color, use_tt);
+                value = negamax(pv[i], 0, -200, 200, color, use_tt);
             } else if( algorithm == 3 ) {
-                //value = scout(pv[i], 0, color, use_tt);
+                value = scout(pv[i], 0, color, use_tt);
             } else if( algorithm == 4 ) {
-                //value = negascout(pv[i], 0, -200, 200, color, use_tt);
+                value = negascout(pv[i], 0, -200, 200, color, use_tt);
             }
         } catch( const bad_alloc &e ) {
             cout << "size TT[0]: size=" << TTable[0].size() << ", #buckets=" << TTable[0].bucket_count() << endl;
@@ -125,3 +125,26 @@ int main(int argc, const char **argv) {
     return 0;
 }
 
+/* Negamax without alpha-beta prunning */
+
+int negamax(state_t state, int depth, int color, bool use_tt){
+    return 0;
+}
+
+/* Negamax with alpha-beta prunning */
+
+int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_tt){
+    return 0;
+}
+
+/* Scout */
+
+int scout(state_t state, int depth, int color, bool use_tt){
+    return 0;
+}
+
+/* Negascout = Negamax with alpha-beta prunning + scout */
+
+int negascout(state_t state, int depth, int alpha, int beta, int color, bool use_tt){
+    return 0;
+}
