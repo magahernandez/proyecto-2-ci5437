@@ -198,8 +198,31 @@ inline bool state_t::outflank(bool color, int pos) const {
         if( (p < x - 1) && (p >= cols[pos - 4]) && !is_free(*p) ) return true;
     }
 
-    // [CHECK OVER DIAGONALS REMOVED]
-    assert(0);
+    // Check diagonals
+
+    // Check diagonal 1
+    x = dia1[pos - 4];
+    while( *x != pos ) ++x;
+    if( *(x+1) != -1 ) {
+        for( p = x + 1; (*p != -1) && !is_free(*p) && (color ^ is_black(*p)); ++p );
+        if( (p > x + 1) && (*p != -1) && !is_free(*p) ) return true;
+    }
+    if( x != dia1[pos - 4] ) {
+        for( p = x - 1; (p >= dia1[pos - 4]) && !is_free(*p) && (color ^ is_black(*p)); --p );
+        if( (p < x - 1) && (p >= dia1[pos - 4]) && !is_free(*p) ) return true;
+    }
+
+    // Check diagonal 2
+    x = dia2[pos - 4];
+    while( *x != pos ) ++x;
+    if( *(x+1) != -1 ) {
+        for( p = x + 1; (*p != -1) && !is_free(*p) && (color ^ is_black(*p)); ++p );
+        if( (p > x + 1) && (*p != -1) && !is_free(*p) ) return true;
+    }
+    if( x != dia2[pos - 4] ) {
+        for( p = x - 1; (p >= dia2[pos - 4]) && !is_free(*p) && (color ^ is_black(*p)); --p );
+        if( (p < x - 1) && (p >= dia2[pos - 4]) && !is_free(*p) ) return true;
+    }
 
     return false;
 }
@@ -226,7 +249,7 @@ inline state_t state_t::move(bool color, int pos) const {
     state_t s(*this);
     if( pos >= DIM ) return s;
 
-    assert(outflank(color, pos));
+    // assert(outflank(color, pos));
     s.set_color(color, pos);
 
     // Flip color of outflanked stones
