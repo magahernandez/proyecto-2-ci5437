@@ -102,7 +102,7 @@ int main(int argc, const char **argv) {
             } else if( algorithm == 2 ) {
                 value = negamax(pv[i], 0, -200, 200, color, use_tt);
             } else if( algorithm == 3 ) {
-                value = scout(pv[i], 0, color, use_tt);
+                value = color * scout(pv[i], 0, color, use_tt);
             } else if( algorithm == 4 ) {
                 value = negascout(pv[i], 0, -200, 200, color, use_tt);
             }
@@ -130,12 +130,11 @@ int main(int argc, const char **argv) {
 
 int negamax(state_t state, int depth, int color, bool use_tt){
 
-    //cout << state << "\n";
     bool player = (color < 0) ? 0 : 1;
     int alpha = -INFINITY;
     bool move = false;
 
-    if (state.terminal() ) {
+    if (state.terminal()) {
         return color * state.value();
     }
 
@@ -200,10 +199,107 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
     return score;
 }
 
+/* TEST */
+
+bool TEST(state_t state, int depth, int score, int color, int condition){
+
+    bool player = (color < 0) ? 0 : 1;
+    bool move = false;
+
+    if (state.terminal()){
+        if (condition == 0){
+            return state.value() > score ? true : false;
+        }else{
+            return state.value() >= score ? true : false;
+        }
+    }
+
+    ++expanded;
+
+    // foreach child of node
+    for (int pos = 0; pos < DIM; pos++) {
+
+        // If at least one stone are flanked 
+        if (state.outflank(player, pos)) {
+
+            // Moved
+            move = true;
+            ++generated;
+
+            // Max
+            if (color == 1 && TEST(state.move(player, pos), depth - 1, score, -color, condition)){
+                return true;
+            }
+
+            // Min
+            if (color == -1 && !TEST(state.move(player, pos), depth - 1, score, -color, condition)){
+                return false;
+            }
+        }
+    }
+
+    if (!move) {
+        if (color == 1 && TEST(state, depth - 1, score, -color, condition)){
+            return true;
+        }
+        if (color == -1 && !TEST(state, depth - 1, score, -color, condition)){
+            return false;
+        }
+        ++generated;
+    }
+
+    return color != 1;
+}
+
+
 /* Scout */
 
 int scout(state_t state, int depth, int color, bool use_tt){
-    return 0;
+
+    bool player = (color < 0) ? 0 : 1;
+    bool move = false;
+    int score = 0;
+    bool isFirstChild = true;
+
+    if (state.terminal()) {
+        return state.value();
+    }
+
+    ++expanded;
+
+    // foreach child of node
+    for (int pos = 0; pos < DIM; pos++) {
+
+        // If at least one stone are flanked 
+        if (state.outflank(player, pos)) {
+            // Moved
+            move = true;
+            ++generated;
+            if (isFirstChild) {
+                isFirstChild = false;
+                score = scout(state.move(player, pos), depth - 1, -color, use_tt);
+            }
+            else {
+
+                // Max
+                if (color == 1 && TEST(state.move(player, pos), depth - 1, score, -color, 0)){
+                    score = scout(state.move(player, pos), depth - 1, -color, use_tt);
+                }
+
+                // Min
+                if (color == -1 && !TEST(state.move(player, pos), depth - 1, score,-color, 1)){
+                    score = scout(state.move(player, pos), depth - 1, -color, use_tt);
+                }
+            }
+        }
+    }
+
+    if (!move) {
+        score = scout(state, depth - 1, -color, use_tt);
+        ++generated;
+    }
+
+    return score;
 }
 
 /* Negascout = Negamax with alpha-beta prunning + scout */
