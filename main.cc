@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <limits>
-#include "othello_cut.h" // won't work correctly until .h is fixed!
+#include "othello_cut.h"
 #include "utils.h"
 
 #include <unordered_map>
@@ -16,6 +16,7 @@ using namespace std;
 unsigned expanded = 0;
 unsigned generated = 0;
 int tt_threshold = 32; // threshold to save entries in TT
+int INFINITY = std::numeric_limits<int>::max();
 
 // Transposition table (it is not necessary to implement TT)
 struct stored_info_t {
@@ -86,7 +87,7 @@ int main(int argc, const char **argv) {
     // Run algorithm along PV (bacwards)
     cout << "Moving along PV:" << endl;
     for( int i = 0; i <= npv; ++i ) {
-        //cout << pv[i];
+        //cout << "pv[i]: " << pv[i] << "\n";
         int value = 0;
         TTable[0].clear();
         TTable[1].clear();
@@ -128,7 +129,36 @@ int main(int argc, const char **argv) {
 /* Negamax without alpha-beta prunning */
 
 int negamax(state_t state, int depth, int color, bool use_tt){
-    return 0;
+
+    //cout << state << "\n";
+    bool player = (color < 0) ? 0 : 1;
+    int alpha = -INFINITY;
+    bool move = false;
+
+    if (state.terminal() ) {
+        return color * state.value();
+    }
+
+    ++expanded;
+
+    // foreach child of node
+    for (int pos = 0; pos < DIM; pos++) {
+
+        // If at least one stone are flanked 
+        if (state.outflank(player, pos)) {
+            // Moved
+            move = true;
+            ++generated;
+            alpha = max(alpha, -negamax(state.move(player, pos), depth - 1, -color, use_tt));
+        }
+    }
+
+    if (!move) {
+        ++generated;
+        alpha = max(alpha, -negamax(state, depth - 1, -color, use_tt));
+    }
+
+    return alpha;
 }
 
 /* Negamax with alpha-beta prunning */
