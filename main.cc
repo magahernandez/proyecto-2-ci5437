@@ -164,7 +164,40 @@ int negamax(state_t state, int depth, int color, bool use_tt){
 /* Negamax with alpha-beta prunning */
 
 int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_tt){
-    return 0;
+
+    bool player = (color < 0) ? 0 : 1;
+    int score = -INFINITY;
+    bool move = false;
+    int val;
+
+    if (state.terminal() ) {
+        return color * state.value();
+    }
+
+    ++expanded;
+
+    // foreach child of node
+    for (int pos = 0; pos < DIM; pos++) {
+
+        // If at least one stone are flanked 
+        if (state.outflank(player, pos)) {
+            // Moved
+            move = true;
+            ++generated;
+            val = -negamax(state.move(player, pos), depth - 1, -beta, -alpha, -color, use_tt);
+            score = max(score, val);
+            alpha = max(alpha, val);
+            if (alpha >= beta) break;
+        }
+    }
+
+    if (!move) {
+        ++generated;
+        val = -negamax(state, depth - 1, -beta, -alpha, -color, use_tt);
+        score = max(score, val);
+    }
+
+    return score;
 }
 
 /* Scout */
