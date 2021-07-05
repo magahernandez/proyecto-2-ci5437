@@ -282,12 +282,12 @@ int scout(state_t state, int depth, int color, bool use_tt){
             else {
 
                 // Max
-                if (color == 1 && TEST(state.move(player, pos), depth - 1, score, -color, 0)){
+                if (color == 1 && TEST(state.move(player, pos), depth - 1, score, -color, use_tt)){
                     score = scout(state.move(player, pos), depth - 1, -color, use_tt);
                 }
 
                 // Min
-                if (color == -1 && !TEST(state.move(player, pos), depth - 1, score,-color, 1)){
+                if (color == -1 && !TEST(state.move(player, pos), depth - 1, score,-color, use_tt)){
                     score = scout(state.move(player, pos), depth - 1, -color, use_tt);
                 }
             }
@@ -305,5 +305,47 @@ int scout(state_t state, int depth, int color, bool use_tt){
 /* Negascout = Negamax with alpha-beta prunning + scout */
 
 int negascout(state_t state, int depth, int alpha, int beta, int color, bool use_tt){
-    return 0;
+    
+    bool player = (color < 0) ? 0 : 1;
+    bool move = false;
+    int score = -INFINITY;
+    bool isFirstChild = true;
+
+    if (state.terminal()) {
+        return color * state.value();
+    }
+
+    ++expanded;
+
+    // foreach child of node
+    for (int pos = 0; pos < DIM; pos++) {
+        
+        // If at least one stone are flanked 
+        if (state.outflank(player, pos)) {
+            // Moved
+            move = true;
+            ++generated;
+            if (isFirstChild) {
+                isFirstChild = false;
+                score = -negascout(state.move(player, pos), depth + 1, -beta, -alpha, -color, use_tt);
+            }
+            else {
+                score = -negascout(state.move(player, pos), depth + 1, -alpha - 1, -alpha, -color, use_tt);
+                if (alpha<score && score<beta) {
+                    score = -negascout(state.move(player, pos), depth + 1, -beta, -score, -color, use_tt);
+                }
+            }
+            alpha = max(alpha, score);
+            if (alpha >= beta) break;
+        }
+    }
+
+    if (!move) {
+        score = -negascout(state, depth + 1, -beta, -alpha, -color, use_tt);
+        alpha = max(alpha, score);
+        ++generated;
+    }
+    
+    return alpha;
+
 }
